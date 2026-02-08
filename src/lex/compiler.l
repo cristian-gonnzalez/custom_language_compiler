@@ -4,19 +4,16 @@
 
 #define _POSIX_C_SOURCE 200809L
 
+#include <limits.h>
 #include <string.h>
 #include <stdlib.h>
-
 #include <stdio.h>
 #include <math.h>
-#include <limits.h>
 #include <float.h>
-#include <stdio.h>
 
 #include "datatype.h"
 #include "symtab.h"
 #include "compiler.tab.h"
-
  
 /*==================================================================================================
  * Configuration
@@ -49,8 +46,8 @@ extern symtab_t _symtab;
 int yylex();
 void yyerror( const char* fmt, ... );
 
-void int_check_bound( int integer );
-void string_check_bound( char* string );
+void int_check_bound(int value);
+void string_check_bound(const char *str);
 
 %}
 
@@ -189,34 +186,36 @@ SPECIAL_CHAR              [^\t\^\¿\\\r\n\"\~\?\¥\®\@\∞\¨]+
 %%
 
 
-void int_check_bound( int integer ) 
+void int_check_bound(int value)
 {
-   char strError[200];
-  
-  /* Check for the maximum signed integer number 32767 for 16bits; Check for the minimum signed integer number -32768 for 16bits*/
-  if( integer < SHRT_MIN || integer > SHRT_MAX || integer == -1 )  {
-    memset( strError, 0,  sizeof(strError));
-    if (integer != -1)
-      sprintf(strError,"\nInteger '%d' out of bounds. Values is between %d and %d \n", integer, SHRT_MIN, SHRT_MAX );
-    else
-      sprintf(strError,"\nInteger out of bounds. Values is between %d and %d \n", SHRT_MIN, SHRT_MAX );
-    yyerror(strError);
-  }
-
-}
-
-void string_check_bound( char* string ) 
-{
-  int count = 0;
-  int i = 0;
-  for( ; string[i] != 0 ; i++ ) 
-  {
-    if ( string[i] != '"' ) 
-      count++;
-    
-    if ( count > STRING_MAX_LENGTH ) 
+    char error[200];
+    if (value < SHRT_MIN || value > SHRT_MAX)
     {
-      yyerror( "\nString '%s' out of bounds", string );
+        snprintf( error, sizeof(error),
+                  "\nInteger '%d' out of bounds. Value must be between %d and %d\n", value,
+                                                                                     SHRT_MIN,
+                                                                                     SHRT_MAX );
+        yyerror(error);
     }
-  }
 }
+
+void string_check_bound(const char *str)
+{
+    int length = 0;
+    for (int i = 0; str[i] != '\0'; ++i)
+    {
+        if (str[i] != '"')
+            length++;
+
+        if (length > STRING_MAX_LENGTH)
+        {
+            char error[256];
+            snprintf( error,sizeof(error),
+                      "\nString '%s' out of bounds. Max length is %d\n", str,
+                                                                         STRING_MAX_LENGTH );
+            yyerror(error);
+            return;   // stop after first error
+        }
+    }
+}
+
