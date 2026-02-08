@@ -70,7 +70,7 @@ ID                        {CHAR}[A-Za-z_0-9]*
 
 ignora                    " "|\t|\n
 NEW_LINE                  [\r\n]
-WHITE_SPACE               [ \t]
+WHITE_SPACE               [ \t]+
 SPECIAL_CHAR              [^\t\^\¿\\\r\n\"\~\?\¥\®\@\∞\¨]+
 
 %%                         
@@ -122,7 +122,7 @@ SPECIAL_CHAR              [^\t\^\¿\\\r\n\"\~\?\¥\®\@\∞\¨]+
                             LEX_LOG("token ID:[%s]", yytext );  
                             
                             
-                            yylval.str = yytext;
+                            yylval.str = strdup(yytext);
 
                             return ID;
                           }
@@ -159,7 +159,7 @@ SPECIAL_CHAR              [^\t\^\¿\\\r\n\"\~\?\¥\®\@\∞\¨]+
                             LEX_LOG("token CTE:[%s] -> {'name': %s, 'value': '%s'}", yytext, name, val );  
                             
                             // pass the pointer to the parser
-                            yylval.str = yytext;
+                            yylval.str = strdup(yytext);
                             return CTE; 
                           }
 
